@@ -44,16 +44,73 @@
         <h3>Motivation</h3>
         <p>Stable Diffusion Model이 이미지 생성에 주로 사용되는 것을 보고, 비슷한 방식으로 텍스트 생성을 할 수 있을 것 같다는 생각을 함. 하지만 텍스트, 즉 언어의 경우 언어의 순차적 특성을 반영해야 해서, Diffusion 방식이 이에 맞는 방식인지 의문을 품음. 그러던 중 2025년 5월 20일에 열린 구글 I/O를 보고, Diffusion-Based LLM Model 이 이미 기업들에 의해 연구되고 있다는 사실을 파악함. 이에 추가적인 정보 획득과 응용 방안에 대해 알아보기 위해 주제를 선정함.</p>
         <h3>Goals</h3>
-        <p>What do you want to see at the end?</p>
+        <p>Diffusion-based LLM의 개념 및 구조 분석, 현 모델 및 작동 알고리즘의 개선점 파악 및 모델 재구성 시도</p>
     </div>
 
     <div class="section">
         <h2>II. Datasets</h2>
-        <p>Describing your dataset</p>
+        <p><a href="https://huggingface.co/GSAI-ML/LLaDA-8B-Instruct">https://huggingface.co/GSAI-ML/LLaDA-8B-Instruct</a></p>
     </div>
 
     <div class="section">
         <h2>III. Methodology</h2>
+        <h3>Pre-Knowledge</h3>
+        <p><b>Stable Diffusion Model Process</b><br><br>
+            1. Diffusion Process (Forward Process)<br>
+            실제 이미지에 점점 노이즈를 추가해서 완전히 무작위한 노이즈로 바꾸는 과정.<br>
+            
+
+            이 과정을 통해 노이즈 단계별 데이터 분포를 학습.<br>
+            2. Denoising Process (Reverse Process)<br>
+            위에서 만든 노이즈를 역으로 제거해서 원래의 이미지를 복원하는 과정.<br>
+            
+            
+            이걸 학습하는 모델이 바로 UNet.<br>
+            
+            
+            UNet은 여러 해상도에서 피쳐를 추출하고 조합하는 CNN 구조.<br>
+            
+            
+            UNet은 노이즈가 추가된 이미지와 시간 단계 ttt, 그리고 텍스트 인코딩 정보를 받아서 노이즈 성분을 예측.<br>
+            3. Latent Diffusion (잠재 확산)<br>
+            고해상도 이미지 (예: 512×512) 공간에서 직접 학습하고 생성하면 계산량이 너무 많음.<br>
+            
+            
+            대신 이미지 생성은 잠재 공간(latent space)에서 이루어짐:<br>
+            
+            
+            VAE (Variational Autoencoder)를 사용해 원래 이미지를 잠재 공간으로 압축하고,<br>    
+            
+            
+            이 latent 공간에서 diffusion을 수행한 후,<br>
+            
+            
+            다시 디코더를 통해 원래 이미지 공간으로 복원.<br>
+            
+            
+            이렇게 함으로써 메모리 사용량을 줄이고 속도를 향상.<br>
+            4. 텍스트 조건부 생성 (Text Conditioning)<br> 
+            CLIP Text Encoder를 이용해 입력 텍스트를 벡터로 인코딩.<br>
+            
+            
+            이 텍스트 인코딩은 UNet에 조건(condition)으로 제공되어, 텍스트 의미를 반영한 이미지를 생성하게 됨.<br>
+            
+            
+            이를 cross-attention 메커니즘으로 구현.<br><br>
+            
+            
+            <b>전체 흐름 요약</b><br>
+            1. 입력 텍스트 → CLIP text encoder → 텍스트 임베딩<br>
+            
+            
+            2. 랜덤 노이즈 → UNet에 주입 (시간 정보 + 텍스트 임베딩과 함께)<br>
+            
+            
+            3. 노이즈를 점점 제거 → latent representation 복원<br>
+            
+            
+            4. latent representation → VAE decoder → 최종 이미지<br>
+            </p>
         <h3>Algorithms</h3>
         <p>Explaining your choice of algorithms (methods)</p>
         <h3>Features</h3>
